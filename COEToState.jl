@@ -9,12 +9,12 @@ function state(coe, μ::Float64 = 6.67e-20)
     """
     
     # Unpack COE vector
-    [h, i, Ω, e, ω, θ] = coe
+    h, i, Ω, e, ω, θ = coe
 
     # Calculate miscellaneos COEs
 
     # Calculate r̲₀ and v̲₀
-    r̲₀ = (h²/μ) * (1 / (1 + (e * cos(θ)))) .* [cosd(θ); sind(θ); 0]
+    r̲₀ = ((h^2)/μ) * (1 / (1 + (e * cos(θ)))) .* [cosd(θ); sind(θ); 0]
     v̲₀ = (μ/h) .* [-sind(θ); e + cosd(θ); 0]
 
     # Calculate Rotation Matrix Q̲
@@ -33,5 +33,5 @@ function state(coe, μ::Float64 = 6.67e-20)
     r̲ₓ = Q̲ * r̲₀
     v̲ₓ = Q̲ * v̲₀
 
-    return [r̲ₓ, v̲ₓ]
+    return [r̲ₓ; v̲ₓ]
 end
