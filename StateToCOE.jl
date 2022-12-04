@@ -1,6 +1,7 @@
 function coe(state, μ)
     """
     This function will return the COE's given from the state vector provided
+        package LinearAlgebra is REQUIRED
 
     Inputs:
         state - This will be the state vector of the body in the form (r, v) or [r, v], and must be 3 dimensional
