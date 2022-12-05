@@ -11,7 +11,7 @@ function coe(state, μ)
     """
 
     # Unpack state vector
-    r̲, v̲ = state[1:3], state[4:6]
+    r̲, v̲ = state[1:3], state[7:9]
 
     # Preliminary calculations
     r, v = norm(r̲), norm(v̲) # Distance and Speed
@@ -39,9 +39,9 @@ function coe(state, μ)
         e̲ = (1 / μ) * (((v^2 - (μ/r))*r̲) - (r * vᵣ * v̲))
         e = norm(e̲)
             # Checker for Eccentricity
-            if e != sqrt(1 + (((h/μ)^2) * ((v^2)- (2*μ/r))))
-                println("Error in eccentricity")
-            end
+            # if e != sqrt(1 + (((h/μ)^2) * ((v^2)- (2*μ/r))))
+            #     println("Error in eccentricity")
+            # end
 
         # Argument of Perigee, ω
         if e̲[3] >= 0
@@ -58,7 +58,6 @@ function coe(state, μ)
             # θ = 360 - acosd((1/e)*(((h^2)/μ*r) - 1))
             θ = 360 - acosd((e̲ ⋅ r̲)/(e*r))
         end
-    
 
     return [h, i, Ω, e, ω, θ]
 end
