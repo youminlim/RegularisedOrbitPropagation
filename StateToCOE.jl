@@ -11,21 +11,21 @@ function coe(state, μ)
     """
 
     # Unpack state vector
-    r̲, v̲ = state[1:3], state[3:6]
+    r̲, v̲ = state[1:3], state[4:6]
 
     # Preliminary calculations
     r, v = norm(r̲), norm(v̲) # Distance and Speed
     vᵣ = (r̲ ⋅ v̲) / r         # Radial Velocity
     
     # Angular Momentum, h
-    h̲ = x(r̲, v̲)
-    h = norm(h)
+    h̲ = cross(r̲, v̲)
+    h = norm(h̲)
 
     # Inclination, i
     i = acosd(h̲[3] / h)
 
     # Node line, N
-    N̲ = x([0, 0, 1], h̲)
+    N̲ = cross([0, 0, 1], h̲)
     N = norm(N̲)
 
     # Right ascension of the ascending node, Ω
@@ -35,27 +35,30 @@ function coe(state, μ)
         Ω = 360 - acosd(N̲[1] / N)
     end
     
-    # Eccentricity, e
-    e̲ = (1 / μ) * (((v² - (μ/r))*r̲) - (r * vᵣ * v̲))
-    e = norm(e̲)
-        # Checker for Eccentricity
-        if e != sqrt(1 + ((h²/μ²) * (v² - (2*μ/r))))
-            println("Error in eccentricity")
+        # Eccentricity, e
+        e̲ = (1 / μ) * (((v^2 - (μ/r))*r̲) - (r * vᵣ * v̲))
+        e = norm(e̲)
+            # Checker for Eccentricity
+            if e != sqrt(1 + (((h/μ)^2) * ((v^2)- (2*μ/r))))
+                println("Error in eccentricity")
+            end
+
+        # Argument of Perigee, ω
+        if e̲[3] >= 0
+            ω = acosd((N̲ ⋅ e̲) / (N * e))
+        else
+            ω = 360 - acosd((N̲ ⋅ e̲) / (N * e))
         end
 
-    # Argument of Perigee, ω
-    if e̲[3] >= 0
-        ω = acosd((N̲ ⋅ e̲) / (N * e))
-    else
-        ω = 360 - acosd((N̲ ⋅ e̲) / (N * e))
-    end
-
-    # True anomaly, θ
-    if vᵣ >= 0
-        θ = acosd((1/e)*((h²/μ*r) - 1))
-    else
-        θ = 360 - acosd((1/e)*((h²/μ*r) - 1))
-    end
+        # True anomaly, θ
+        if vᵣ >= 0
+            # θ = acosd((1/e)*(((h^2)/μ*r) - 1))
+            θ = acosd((e̲ ⋅ r̲)/(e*r))
+        else
+            # θ = 360 - acosd((1/e)*(((h^2)/μ*r) - 1))
+            θ = 360 - acosd((e̲ ⋅ r̲)/(e*r))
+        end
+    
 
     return [h, i, Ω, e, ω, θ]
 end
