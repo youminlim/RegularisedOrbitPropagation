@@ -9,6 +9,8 @@ Pkg.activate(".")
 include("Planets.jl")
 include("2Body3D.jl")
 include("StateToCOE.jl")
+include("DragPerturbation.jl")
+include("atmosphere.jl")
 
 using LinearAlgebra
 using DifferentialEquations
@@ -111,7 +113,10 @@ function f!(du, u, p, t)
     end
 
     if "Drag" in perturbations
-        nothing
+        BC = 1 / 82
+        a_Drag = drag(BC, u)
+
+        du[7:9] += a_Drag
     end
 
 end
@@ -130,6 +135,7 @@ tspan = (0.0, 16000.0)
 perturbations = defaultPerturbations()
 p = defaultParameters()
 p["perturbations"]["J2"] = true
+p["perturbations"]["Drag"] = true
 input = parameters(p)
 
 problem = ODEProblem(f!, u̲₀, tspan, input)
