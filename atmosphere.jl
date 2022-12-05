@@ -1,4 +1,4 @@
-function atmosphereEarth(altitude)
+function atmosphere(altitude)
     """
     Calculates the air density for a given altitude above Earth sea level
         Uses the simple exponential model
@@ -30,7 +30,9 @@ function atmosphereEarth(altitude)
     ρ = 0
 
     for i in baseAltitude
-        if altitude < i
+        if altitude < 0
+            break
+        elseif altitude < i
             j = findall(x -> x == i, baseAltitude)
             j = j[1] - 1
             ρ = nominalDensities[j] * exp(-(altitude - baseAltitude[j]) / scaleHeight[j])
