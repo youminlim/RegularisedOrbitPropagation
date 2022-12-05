@@ -1,3 +1,4 @@
+using Base: MainInclude
 """ Numerical Propagation for 2 Body Problem with Cowell's Method """
 
 # Add Packages and Libraries
@@ -53,6 +54,14 @@ function parameters(p = defaultParameters())
     return input
 end
 
+function TwoBodyInitial(u)
+    """
+    Rewrites the state vector of a satellite to include the state vector of the central body as input to the 2 body solver
+    """
+    
+    return [u[1:3]; 0; 0; 0; u[4:6]; 0; 0; 0] 
+end
+
 # 2 Body problem with Cowell's Method for a satellite orbit about a central body
 function f!(du, u, p, t)
     """
@@ -76,13 +85,17 @@ function f!(du, u, p, t)
     x, y, z = u[1:3]
     r̲ = [x, y, z]
     r = norm(r̲)
-    du[1:3] = u[4:6]
+    du[1:6] = u[7:12]
 
     G = 6.67e-20
-    μ = centralBody[1] * G
+    μ₁ = centralBody[1] * G
+    μ₂ = satelliteMass * G
+
+    # Central Body
 
     # Calculate accelerations
-    du[4:6] = - μ * r̲ * satelliteMass / r^3
+    du[7:9] = - μ₁ * r̲  / r^3
+    du[10:12] = μ₂ * r̲ / r^3
 
     # Add perturbation effects
     if "J2" in perturbations
@@ -94,7 +107,7 @@ function f!(du, u, p, t)
         żJ2 = (3 - (5*z^2)/r^2) * z
         a_J2 = (-(3/2)*(μ*J₂*R^2) / (r^5)) * [ẋJ2, ẏJ2, żJ2]
 
-        du[4:6] += a_J2
+        du[7:9] += a_J2
     end
 
     if "Drag" in perturbations
@@ -109,47 +122,58 @@ centralBody = Earth()
 μ = G * centralBody["mass"]
 
 # Define state vectors
-u̲₀ = [8000.0, 6000.0, 0.0, 0.0, 5.0, 5.0]
-tspan = (0.0, 1440.0)
+u̲₀ = [8000.0, 0.0, 6000.0, 0.0, 5.0, 5.0]
+u̲₀ = TwoBodyInitial(u̲₀)
+tspan = (0.0, 16000.0)
 
 # solve keplerian Trajectory
 perturbations = defaultPerturbations()
 p = defaultParameters()
+p["perturbations"]["J2"] = true
 input = parameters(p)
 
 problem = ODEProblem(f!, u̲₀, tspan, input)
-solution = solve(problem, dt = 0.1)
+solution = solve(problem, RK4(), dt = 1)
 
 # Convert state vector data to COEs
+begin
     solutionCOE = []
     for i in solution.u
         push!(solutionCOE, coe(i, μ))
     end
     angularMomentum = getindex.(solutionCOE, 1)
-    angularMomentum = angularMomentum/maximum(angularMomentum)
+    #angularMomentum = angularMomentum/maximum(angularMomentum)
     inclination = getindex.(solutionCOE, 2)
-    inclination = inclination/maximum(inclination)
+    #inclination = inclination/maximum(inclination)
     raan = getindex.(solutionCOE, 3)
-    raan = raan/maximum(raan)
+    #raan = raan/maximum(raan)
     eccentricity = getindex.(solutionCOE, 4)
-    eccentricity = eccentricity/maximum(eccentricity)
+    #eccentricity = eccentricity/maximum(eccentricity)
     aop = getindex.(solutionCOE, 5)
     #aop = aop/maximum(aop)
     trueAnomaly = getindex.(solutionCOE, 6)
     #trueAnomaly = trueAnomaly/maximum(trueAnomaly)
+
+    time = solution.t / 3600 
+end
 #
 
+error = maximum(angularMomentum) - minimum(angularMomentum)
+
 # Plot data
+begin
     # Plot trajectory        
     trajectoryPlot = plot(solution, idxs = (1, 2, 3), title = "Satellite Trajectory", xlabel = "x", ylabel = "y", zlabel = "z", label = "Keplerian", size = (1000, 500))
 
     # Plot COEs
-    angularMomentumPlot = plot(solution.t, angularMomentum, title = "Angular Momentum")
-    inclinationPlot = plot(solution.t, inclination, title = "Inclination")
-    raanPlot = plot(solution.t, raan, title = "RAAN Ω")
-    eccentricityPlot = plot(solution.t, eccentricity, title = "Eccentricity")
-    aopPlot = plot(solution.t, aop, title = "Argument of Perigee ω")
-    trueAnomalyPlot = plot(solution.t, trueAnomaly, title = "True Anomaly θ")
+    angularMomentumPlot = plot(time, angularMomentum, title = "Angular Momentum")
+    inclinationPlot = plot(time, inclination, title = "Inclination")
+    raanPlot = plot(time, raan, title = "RAAN Ω")
+    eccentricityPlot = plot(time, eccentricity, title = "Eccentricity")
+    aopPlot = plot(time, aop, title = "Argument of Perigee ω")
+    trueAnomalyPlot = plot(time, trueAnomaly, title = "True Anomaly θ")
+end
+    
 #
 
 # Set Perturbations
@@ -169,4 +193,4 @@ solution = solve(problem, dt = 0.1)
     
 # Display Plots
     display(trajectoryPlot)
-    display(plot(angularMomentumPlot, inclinationPlot, raanPlot, eccentricityPlot, aopPlot, trueAnomalyPlot, layout = (3, 2), size = (1000, 750)))
+    display(plot(angularMomentumPlot, inclinationPlot, raanPlot, eccentricityPlot, aopPlot, trueAnomalyPlot, layout = (3, 2), size = (1250, 1150)))
