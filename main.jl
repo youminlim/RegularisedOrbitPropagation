@@ -15,6 +15,8 @@ include("atmosphere.jl")
 using LinearAlgebra
 using DifferentialEquations
 using Plots
+using GeometryBasics
+using GLMakie
 
 # Dictionary to store defaults perturbation settings
 function defaultPerturbations()
@@ -96,7 +98,7 @@ function f!(du, u, p, t)
     # Central Body
 
     # Calculate accelerations
-    du[7:9] = - μ₁ * r̲  / r^3
+    du[7:9] = - μ₁ * r̲ / r^3
     du[10:12] = μ₂ * r̲ / r^3
 
     # Add perturbation effects
@@ -129,7 +131,7 @@ centralBody = Earth()
 # Define state vectors
 u̲₀ = [8000.0, 0.0, 6000.0, 0.0, 5.0, 5.0]
 u̲₀ = TwoBodyInitial(u̲₀)
-tspan = (0.0, 16000.0)
+tspan = (0.0, 160000.0)
 
 # solve keplerian Trajectory
 perturbations = defaultPerturbations()
@@ -168,9 +170,26 @@ error = maximum(angularMomentum) - minimum(angularMomentum)
 
 # Plot data
 begin
-    # Plot trajectory        
-    trajectoryPlot = plot(solution, idxs = (1, 2, 3), title = "Satellite Trajectory", xlabel = "x", ylabel = "y", zlabel = "z", label = "Keplerian", size = (1000, 500))
+    # Plot trajectory
+    fig = Figure()
+    ax = Axis3(
+        fig[1, 1];
+        title = "Satellite Trajectory"
+    )
 
+    x = solution[1,:]
+    y = solution[2,:]
+    z = solution[3,:]
+
+    lines!(ax, x, y, z, label = "Satellite", color = "red")
+    mesh!(ax, Sphere(Point3f0(0), 6371))
+
+    trajectoryPlot = plot(solution, idxs = (1, 2, 3), title = "Satellite Trajectory", xlabel = "x", ylabel = "y", zlabel = "z", label = "Keplerian", size = (1000, 500))
+    fig[1, 2] = Legend(fig, ax, "Legend")
+    fig
+end
+
+begin
     # Plot COEs
     angularMomentumPlot = plot(time, angularMomentum, title = "Angular Momentum")
     inclinationPlot = plot(time, inclination, title = "Inclination")
@@ -180,6 +199,7 @@ begin
     trueAnomalyPlot = plot(time, trueAnomaly, title = "True Anomaly θ")
 end
     
+
 #
 
 # Set Perturbations
