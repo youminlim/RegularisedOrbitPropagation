@@ -1,4 +1,4 @@
-function state(coe, μ::Float64 = 6.67e-20)
+function state(coe, μ::Float64 = 398332.4)
     """
     Converts COEs into state vector form
     Inputs:
@@ -14,8 +14,10 @@ function state(coe, μ::Float64 = 6.67e-20)
     # Calculate miscellaneos COEs
 
     # Calculate r̲₀ and v̲₀
-    r̲₀ = ((h^2)/μ) * (1 / (1 + (e * cos(θ)))) .* [cosd(θ); sind(θ); 0]
+    r̲₀ = ((h^2)/μ) * (1 / (1 + (e * cosd(θ)))) .* [cosd(θ); sind(θ); 0]
+    println(r̲₀)
     v̲₀ = (μ/h) .* [-sind(θ); e + cosd(θ); 0]
+    println(v̲₀)
 
     # Calculate Rotation Matrix Q̲
     Q11 = -sind(Ω)*cosd(i)*sind(ω) + cosd(Ω)*cosd(ω)
