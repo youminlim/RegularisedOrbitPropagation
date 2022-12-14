@@ -1,6 +1,7 @@
 """ This function calculates the accelerations for the 2 body problem """
 
 # Add Pre-requisite functions for the solver
+include("J2Perturbation.jl")
 include("DragPerturbation.jl")
 
 function twoBodySolver!(du, u, p, t)
@@ -42,19 +43,22 @@ function twoBodySolver!(du, u, p, t)
         # Housekeeping
         R = centralBody[2]
         J₂ = centralBody[3]
-        ẋJ2 = (1 - (5*z^2)/r^2) * x
-        ẏJ2 = (1 - (5*z^2)/r^2) * y
-        żJ2 = (3 - (5*z^2)/r^2) * z
-        a_J2 = (-(3/2)*(μ*J₂*R^2) / (r^5)) * [ẋJ2, ẏJ2, żJ2]
+        
+        # calculate accelerations
+        a_J2 = J2(x, y, z, R, J₂)
 
         du[7:9] += a_J2
     end
 
     if "Drag" in perturbations
+        # Housekeeping
         BC = 1 / 82
+
+        # Calculate accelerations
         a_Drag = drag(BC, u)
 
         du[7:9] += a_Drag
     end
 
 end
+
