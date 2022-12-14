@@ -10,7 +10,8 @@ function J2coe(coe, centralBodyRadius, J₂)
     """
 
     # Unpack COE vector
-    [h, i, Ω, e, ω, θ] = coe
+    i = coe[2]
+    e = coe[4]
 
     # Calculate miscellaneos COEs
     a = (h²/μ) * (1 / (1-e²)) 
