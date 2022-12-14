@@ -1,3 +1,6 @@
+using LinearAlgebra
+include("atmosphere.jl")
+
 function drag(BC, u)
     """
     Calculates the perturbing acceleration from a drag force
