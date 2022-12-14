@@ -1,49 +1,60 @@
-function TwoBody3D!(du, u, p, t)
-    """
-    Function definition of the 2 Body Problem\
-    Input:
-        u - Initial state vector
-        p - Parameters to pass through for calculation, re
-            REQUIRED: [G, M₁, M₂]:
-                G - Universal Gravitational Parameter
-                M₁ - Mass of body 1
-                M₂ - Mass of body 2
-        t - Time variable
+""" This function calculates the accelerations for the 2 body problem """
 
+# Add Pre-requisite functions for the solver
+include("DragPerturbation.jl")
+
+function twoBodySolver!(du, u, p, t)
+    """
+    Inputs:
+        state vector u - 6 states, [x₁, y₁, z₁, x₂, y₂, z₂, ẋ₁, ẏ₁, ż₁, ẋ₂, ẏ₂, ż₂], as motion of central body is not concerned
+        p - parameters to pass to function, has structure : [satelliteMass, centralBody, perturbations]
+            satelliteMass - contains a value representing the mass of the satellite
+
+            centralBody - will have structure [mass, radius, J2] of the central body
+
+            perturbations - will have structure [nothing], override by adding in the string name of each perturbation type, i.e. "J2" in order to apply the accelerations from J2 to the system
     Output:
-        du - Cache array which stores the state vector values after an iteration
+        du - the derivative of the state vector i.e. u̇
     """
 
-    r³ = eulerian(u[1:3], u[4:6])^3
-    body1 = p[1] * p[3]
-    body2 = p[1] * p[2]
+    # Housekeeping
+    satelliteMass = p[1]
+    centralBody = p[2:4]
+    perturbations = p[4:length(p)]
 
-    # Build cache array
+    x, y, z = u[1:3]
+    r̲ = [x, y, z]
+    r = norm(r̲)
     du[1:6] = u[7:12]
 
-    # Second derivatives
-    du[7] = body1*(u[4] - u[1])/r³
-    du[8] = body1*(u[5] - u[2])/r³
-    du[9] = body1*(u[6] - u[3])/r³
-    du[10] = body2*(u[1] - u[4])/r³
-    du[11] = body2*(u[2] - u[5])/r³
-    du[12] = body2*(u[3] - u[6])/r³
+    G = 6.67e-20
+    μ₁ = (G * centralBody[1])
+    μ₂ = (satelliteMass * G)
+
+    # Central Body
+
+    # Calculate accelerations
+    du[7:9] = - μ₁ * r̲ / r^3
+    du[10:12] = μ₂ * r̲ / r^3
+
+    # Add perturbation effects
+    if "J2" in perturbations
+        # Housekeeping
+        R = centralBody[2]
+        J₂ = centralBody[3]
+        ẋJ2 = (1 - (5*z^2)/r^2) * x
+        ẏJ2 = (1 - (5*z^2)/r^2) * y
+        żJ2 = (3 - (5*z^2)/r^2) * z
+        a_J2 = (-(3/2)*(μ*J₂*R^2) / (r^5)) * [ẋJ2, ẏJ2, żJ2]
+
+        du[7:9] += a_J2
+    end
+
+    if "Drag" in perturbations
+        BC = 1 / 82
+        a_Drag = drag(BC, u)
+
+        du[7:9] += a_Drag
+    end
+
 end
-
-# Define 2 body function with varargs
-# function twobody3d(du, u::Vector{Float64}, p::Vector{Float64, N}, N::Int64 == 1, Bodies::Vararg{String, :})
-#     r_cubed = eulerian(u[1:3], u[4:6])^3
-#     body1 = p[1] * p[3]
-#     body2 = p[1] * p[2]
-
-#     # Build cache array
-#     du[1:6] = u[7:12]
-
-#     # Second derivatives
-#     du[7] = body1*(u[4] - u[1])/r_cubed
-#     du[8] = body1*(u[5] - u[2])/r_cubed
-#     du[9] = body1*(u[6] - u[3])/r_cubed
-#     du[10] = body2*(u[1] - u[4])/r_cubed
-#     du[11] = body2*(u[2] - u[5])/r_cubed
-#     du[12] = body2*(u[3] - u[6])/r_cubed
-# end
