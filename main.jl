@@ -8,8 +8,7 @@ Pkg.activate(".")
 
 include("Planets.jl")
 include("2Body3D.jl")
-include("StateToCOE.jl")
-include("COEToState.jl")
+include("coordinateTransfers.jl")
 
 using LinearAlgebra
 using DifferentialEquations
@@ -63,41 +62,6 @@ function TwoBodyInitial(u)
     
     return [u[1:3]; 0; 0; 0; u[4:6]; 0; 0; 0] 
 end
-
-# Extract state vectors from solution of solve() to convert to COEs
-function state2coe(solution, μ)
-    solutionCOE = []
-
-    for i in solution.u
-        push!(solutionCOE, coe(i, μ))
-    end
-
-    return solutionCOE
-end
-
-function state2coeCB(solutionCB, μCB)
-    solutionCB = []
-
-    for i in solution.u
-        push!(solutionCB, coeCB(i, μCB))        
-    end
-
-    return solutionCB
-end
-
-# Extract each COE
-function coeExtractor(solutionCOE)
-    angularMomentum = getindex.(solutionCOE, 1)
-    inclination = getindex.(solutionCOE, 2)
-    raan = getindex.(solutionCOE, 3)
-    eccentricity = getindex.(solutionCOE, 4)
-    aop = getindex.(solutionCOE, 5)
-    trueAnomaly = getindex.(solutionCOE, 6)
-
-    return [angularMomentum, inclination, raan, eccentricity, aop, trueAnomaly]
-end
-
-
 
 # Define global constants
 G = 6.67e-20
