@@ -1,8 +1,9 @@
 """ This function calculates the accelerations for the 2 body problem """
 
 # Add Pre-requisite functions for the solver
-include("J2Perturbation.jl")
-include("DragPerturbation.jl")
+using LinearAlgebra
+include("perturbations/J2Perturbation.jl")
+include("perturbations/DragPerturbation.jl")
 
 function twoBodySolver!(du, u, p, t)
     """
@@ -45,7 +46,7 @@ function twoBodySolver!(du, u, p, t)
         J₂ = centralBody[3]
         
         # calculate accelerations
-        a_J2 = J2(x, y, z, R, J₂)
+        a_J2 = J2state(x, y, z, R, J₂)
 
         du[7:9] += a_J2
     end
@@ -59,6 +60,5 @@ function twoBodySolver!(du, u, p, t)
 
         du[7:9] += a_Drag
     end
-
 end
 
