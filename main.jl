@@ -10,8 +10,6 @@ include("Planets.jl")
 include("2Body3D.jl")
 include("StateToCOE.jl")
 include("COEToState.jl")
-include("DragPerturbation.jl")
-include("atmosphere.jl")
 
 using LinearAlgebra
 using DifferentialEquations
